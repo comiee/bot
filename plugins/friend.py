@@ -3,6 +3,12 @@ from tools.state import conversation, get_user, in_private
 import re
 
 
+@on_request('friend')
+async def _(session: RequestSession):
+    await session.approve()
+    await session.send('欢迎添加小魅机器人为好友')
+
+
 @on_request('group')
 async def _(session: RequestSession):
     await session.approve()
