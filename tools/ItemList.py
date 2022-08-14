@@ -17,7 +17,8 @@ class ItemList(InSession):
     n：整数：每页显示的行数
     """
 
-    def __init__(self, session, data, title, columns, keys, n=5):
+    def __init__(self, session, data, title, columns, keys, n=10):
+        super().__init__(session)
         if isinstance(keys, str):
             keys = keys.split(',')
         if isinstance(columns, str):
@@ -26,7 +27,6 @@ class ItemList(InSession):
             cur.execute(data)
             data = cur.fetchall()
 
-        self.session = session
         self.title = title
         self.columns = columns
         nt = namedtuple('nt', keys)
@@ -60,7 +60,11 @@ class ItemList(InSession):
             del self.session.state['args']
 
     def get(self, repeatable, ask):
-        """显示并根据用户的输入翻页或执行函数"""
+        """显示并根据用户的输入翻页或执行函数
+
+        :param repeatable: 能否批量购买多个
+        :param ask: 询问的语句，会在物品列表和tips之间显示
+        """
         if repeatable:
             pattern = r'\d+\s+\d+|\d+'
         else:

@@ -12,7 +12,7 @@ async def _(session: RequestSession):
 @on_request('group')
 async def _(session: RequestSession):
     await session.approve()
-    await session.send('欢迎新人', at_sender=True)
+    await session.send(f'[CQ:at,qq={get_user(session)}] 欢迎新人')
     if session.ctx['group_id'] == 694541980:
         name = re.search(r'答案：(.*)$', session.ctx['comment']).group(1)
         await session.bot.set_group_card(**session.ctx, card=name)

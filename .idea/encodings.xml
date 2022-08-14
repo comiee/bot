@@ -3,5 +3,6 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/awesome/data/teach.json" charset="GBK" />
     <file url="file://$PROJECT_DIR$/awesome/plugins/temp.json" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/data/log.txt" charset="GBK" />
   </component>
 </project>

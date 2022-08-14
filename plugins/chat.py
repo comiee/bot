@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from nonebot.log import logger
-from tools.state import State, get_id, mode, on_message, on_mode, when
+from tools.state import history, mode, on_message, on_mode, when
 from tools.User import User
 from tools.sql import cur, is_ban
 import re
@@ -8,9 +8,7 @@ import random
 import json
 
 exec('from datetime import datetime;'
-     'from tools.functions import to_int;')
-
-last = State(lambda: ['', 0], get_id)
+     'from tools.functions import to_int,to_num;')
 
 
 @on_command('开', aliases=('开启', '聊天'))
@@ -39,7 +37,8 @@ async def _(session: CommandSession):
 
 @on_message
 @on_mode('chat')
-@when({'user_id': {3031315187, 1790218632, 1845455477, 2854196306, 1793979796, 2150533306}}, black_list=True)
+@when({'user_id': {3031315187, 1790218632, 1845455477, 2854196306, 1793979796, 2150533306, 860411932}},
+      black_list=True)  # 无视其他机器人
 async def _(session):
     """处理聊天"""
     text = session.ctx['raw_message']
@@ -61,16 +60,15 @@ async def _(session):
         logger.info('已发送：' + s)
 
     # 处理复读
-    global last
-    last_text, last_num = last[session]
+    last_text, last_num = history[session]
     if last_text == text:
-        last[session][1] += 1
+        history[session][1] += 1
         if 3 <= last_num <= 5:
             await send(['复读机？', '一直重复一句话有意思吗？', '再这样我就不理你了！'][last_num - 3])
         if 3 <= last_num:
             return
     else:
-        last[session] = [text, 1]
+        history[session] = [text, 1]
 
     # 处理艾特自己
     if f'[CQ:at,qq={session.self_id}]' in text:

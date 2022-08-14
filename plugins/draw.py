@@ -1,7 +1,7 @@
 from nonebot import on_command, CommandSession, on_natural_language, NLPSession, IntentCommand
-from tools.sql import cur
-from tools.state import conversation, broadcast
+from tools.state import conversation, broadcast, is_sure
 from tools.User import User
+from adventure.Player import Player
 import random
 from functools import partial, reduce
 
@@ -50,22 +50,53 @@ async def _(session: NLPSession):
 
 
 @on_command('俄罗斯转盘')
+@conversation
 async def _(session: CommandSession):
-    user = User(session)
+    player = Player(session)
     send = partial(session.send, at_sender=True)
-    text = user + '''\
+    if not player.alive:
+        await send('你已经死亡，无法参加此游戏，请复活后再试。')
+        return
+    answer = yield f'''\
 游戏规则：
-每次消耗10体力。从1~6中抽取一个数字，若为6，损失100金币；若不为6，获得20金币。
-是否继续？'''
-    await user.ask(text)
-    await user.ensure_cost(10, 'stamina')
-    if (num := random.randint(1, 6)) != 6:
-        user.gain(20)
-        await send(f'你抽中的数字是{num}，恭喜获得20金币！')
-    else:
-        if not user.cost(100):
-            cur.execute(f'insert into info(qq,coin) values({user},0) on duplicate key update coin=0;')
-        await send('很不幸，你抽中了6，损失100金币。')
+初始筹码为2金币，转盘中共有1~6六个数字。
+每次操作都会使筹码翻倍，然后从转盘剩余数字中抽走一个数字（不放回），
+若抽走的数字为6，游戏结束，玩家需要支付筹码；
+若抽走的数字不为6，玩家可以选择继续游戏或者带着现有的筹码离开。
+抽光所有的非6数字后奖励将升值为100金币。
+选择继续将花费10体力开始游戏，
+{player!r}继续还是退出？'''
+    if not is_sure(answer):
+        await send('已放弃游戏')
+        return
+    await player.ensure_cost(10, 'stamina')
+    chip = 2
+    nums = [1, 2, 3, 4, 5, 6]
+    while 1:
+        chip *= 2
+        num = random.choice(nums)
+        nums.remove(num)
+        if num == 6:
+            await send(f'很不幸，你抽中了6，赌场老板从你这里收取了{chip}金币')
+            if not player.cost(chip):
+                player.die()
+                await send('由于无法支付筹码，被赌场老板活活打死！\n小魅在这里提醒大家，进入赌场前请先确认自己带有充足的金币哦')
+            return
+        else:
+            if len(nums) == 1:
+                player.gain(100)
+                await send(f'抽中的数字为{num}，恭喜获得大奖100金币！')
+                return
+            answer = yield f'{player!r}抽中的数字为{num}，转盘剩余数字为{nums}，当前筹码为{chip}\n继续还是退出？'
+            while 1:
+                if answer in {'是', '继续', 'Y', 'y', 'yes', '确认'}:
+                    break
+                elif answer in {'否', '退出', 'N', 'n', 'no', '取消'}:
+                    player.gain(chip)
+                    await send(f'选择了见好就收，带着{chip}金币离开了')
+                    return
+                else:
+                    answer = yield f'{player!r}错误的选项，请说“继续”或“退出”'
 
 
 @on_command('老虎机')

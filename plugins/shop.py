@@ -10,7 +10,7 @@ async def _(session: CommandSession):
     user = User(session)
     commodities = ItemList(session, '''
         select item_id.id,name,price,info from shop inner join item_id on shop.id=item_id.id 
-        where price>=0 order by priority desc;
+        where price>=0 order by priority desc,id;
     ''', '商品列表', '编号\t名称\t价格\t介绍', 'id,name,price,info')
 
     @commodities.get(True, '请输入要购买的物品编号和数量')

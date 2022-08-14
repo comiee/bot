@@ -18,3 +18,13 @@ async def _(session: CommandSession):
     cur.execute('select qq,coin from info order by -coin;')
     coin_list = '\n'.join(f'{coin:5d}\t{user_list[qq]}' for qq, coin in cur.fetchall() if qq in user_list)
     await session.send('本群金币排行榜\n金币\t用户\n' + coin_list)
+
+
+@on_command('股份排行', aliases=('股票排行', '股市排行'))
+@in_group
+async def _(session: CommandSession):
+    member_list = await session.bot.get_group_member_list(**session.ctx)
+    user_list = {str(i['user_id']): i['card'] or i['nickname'] for i in member_list}
+    cur.execute('select qq,stock from info order by -stock;')
+    coin_list = '\n'.join(f'{stock:5d}\t{user_list[qq]}' for qq, stock in cur.fetchall() if qq in user_list)
+    await session.send('本群股份排行榜\n股份\t用户\n' + coin_list)

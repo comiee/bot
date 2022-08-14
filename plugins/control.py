@@ -6,7 +6,6 @@ import json
 import os
 import time
 import re
-from win10toast import ToastNotifier
 from threading import Thread
 
 path = 'data/record.json'
@@ -31,11 +30,6 @@ async def send(context, message, **kwargs):
 
     if len(record_self_id) > 7:
         record_self_id.pop(sorted(record_self_id)[0])
-    if record_self_id[today] > 1800:
-        await _send(context, '今日次数已达上限，为防止被封，小魅将进入休眠，大家明天见！')
-        Thread(target=lambda: ToastNotifier().show_toast('小魅', '小魅休息了', 'mei.ico', 86400), daemon=True).start()
-        time.sleep(5)
-        exit()
 
     with open(path, 'w') as fout:
         json.dump(record, fout)
@@ -78,13 +72,14 @@ async def _():
                 if s < 60 * 10:  # 10分钟
                     msg = ''
                 elif s < 60 * 60:  # 1小时
-                    msg = '小魅休眠了一小段时间，看来主人在调试bug呢'
+                    msg = '小魅休眠了一小段时间，看来主人的电脑又出故障了呢'
                 elif s < 60 * 60 * 8:  # 8小时
                     msg = f'大家好，小魅起床了，可以继续为大家服务了。这次小魅只睡了{s // 3600}小时{s % 3600 // 60}分钟，有点困呢'
                 elif s < 60 * 60 * 24:  # 24小时
                     msg = f'元气少女小魅起床！这次小魅睡了整整{s // 3600}小时{s % 3600 // 60}分钟！，现在小魅精神满满！'
                 else:
                     msg = f'距离上次醒来已经过去了{s // 86400}天{s % 86400 // 3600}小时，休眠的时间太长让人感觉很寂寞呢'
-                await broadcast(msg)
+                for group_id in [694541980, 811912656, 324085758]:
+                    await bot.send_group_msg(group_id=group_id, message=msg)
             with open(log_path, 'w', encoding='utf-8') as fo:
                 fo.writelines(lines[-100:])

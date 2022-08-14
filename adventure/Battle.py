@@ -1,41 +1,18 @@
-from adventure.EnemyGroup import Enemy, EnemyGroup
+from adventure.Enemy import Enemy
 from adventure.Player import Player
 from adventure.Scene import Scene, Option
 from adventure.exceptions import Dead
 import random
-from comiee import fixed
-
-
-class Opts(Scene):
-    def __init__(self, session, enemy_group):
-        super().__init__(session)
-        self.options = Option()
-
-        for enemy in enemy_group.enemy_list:
-            @self.options(enemy.name)
-            @fixed(self.options.key-1)
-            def _(key):
-                enemy_group.select(key)
-
-    async def ask(self, before='请选择怪物：', end=''):
-        await super().ask(before, end)
 
 
 class Battle(Scene):
+    """战斗"""
     options = Option()
-    selected = None
 
     def __init__(self, session, player: Player, target: Enemy):
         super().__init__(session)
         self.player = player
         self.target = target
-
-    async def ask(self, before='', end=''):
-        if self.selected is None:
-            await super().ask(before, end)
-        else:
-            await self.selected()
-            self.selected = None
 
     async def run(self):
         while 1:
@@ -55,9 +32,6 @@ class Battle(Scene):
 
     @options('攻击')
     async def attack(self):
-        if isinstance(self.target, EnemyGroup) and self.target.selected is None:
-            self.selected = self.attack
-            super().goto(Opts, self.target, back=False)
         result = [self.player.hurt(self.target), self.target.hurt(self.player)]
         await super().send('\n'.join(result))
 

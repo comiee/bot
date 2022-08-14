@@ -10,9 +10,10 @@ teach_path = 'data/teach.json'
 diary_path = 'data/diary.txt'
 
 # 每天将昨天的日记文件名后加日期，然后生成新的日记文件
-last_time = datetime.fromtimestamp(os.path.getmtime(diary_path)).strftime('%y%m%d')
-if last_time != datetime.now().strftime('%y%m%d'):
-    os.rename(diary_path, f'data/diary{last_time}.txt')
+if os.path.exists(diary_path):
+    last_time = datetime.fromtimestamp(os.path.getmtime(diary_path)).strftime('%y%m%d')
+    if last_time != datetime.now().strftime('%y%m%d'):
+        os.rename(diary_path, f'data/diary{last_time}.txt')
 if not os.path.exists(diary_path):
     open(diary_path, 'w', encoding='utf-8').close()
 
@@ -28,7 +29,7 @@ async def _(session: CommandSession):
         if not q.strip() or not a.strip():
             await session.send('问题或回答为空！')
             return
-        if is_command(q.split()[0]):
+        if is_command(q):
             await session.send('调教词与原有命令冲突！')
             return
         with open('data/chat.txt', encoding='utf-8') as f:

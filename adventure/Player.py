@@ -32,7 +32,7 @@ class Attribute:
         # 装备加成
         if is_columns('armor_id', self.name) and cur.execute(f'''
             select {self.name} from equipment inner join armor_id on equipment.id=armor_id.id 
-            where qq={user} and {self.name}>0;
+            where qq={user} and {self.name}!=0;
         '''):
             data.extend(Attr(i[0], '%+d' % i) for i in cur.fetchall())
         # buff加成
@@ -67,13 +67,13 @@ class Player(User, Entity):
         return super().__repr__()
 
     @property
-    def live(self):
+    def alive(self):
+        """玩家是否活着"""
         return self.hp > 0
 
-    @live.setter
-    def live(self, value):
-        if value is False:
-            self.hp = 0
+    def die(self):
+        """死亡"""
+        self.hp = 0
 
     def revive(self):
         """复活"""

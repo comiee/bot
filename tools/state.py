@@ -1,11 +1,12 @@
 """共用的数据和函数"""
 
 from nonebot import _bot, on_command, on_natural_language
-from nonebot.command import _registry, _aliases, _FinishException
+from nonebot.command import CommandManager, _FinishException
 from nonebot.session import BaseSession
 from tools.sql import get_user
 from collections import defaultdict
 from functools import wraps
+from itertools import chain
 
 
 def get_id(session):
@@ -13,9 +14,25 @@ def get_id(session):
     return session.ctx.get('group_id', session.ctx['user_id'])
 
 
-def is_command(cmd):
+def is_command(cmd: str):
     """判断是不是已有命令"""
-    return cmd in _registry or cmd in _aliases
+    for i in chain(*CommandManager._commands, CommandManager._aliases):
+        if cmd.split()[0] == i:
+            return True
+    return False
+
+
+def is_sure(s):
+    """判断用户回答是肯定还是否定"""
+    return s in {'是', '继续', 'Y', 'y', 'yes', '确认'}
+
+
+async def is_friend(user):
+    """判断此人是不是好友"""
+    for friend in await _bot.get_friend_list():
+        if user == friend['user_id']:
+            return True
+    return False
 
 
 async def broadcast(msg):
@@ -52,7 +69,7 @@ def on_mode(mode_name):
                     or not power[session] \
                     or not text.strip() \
                     or text[0] == '%' \
-                    or is_command(text.split()[0]):
+                    or is_command(text):
                 return
             else:
                 return await func(session)
@@ -164,6 +181,8 @@ class InSessionMeta(type):
 
 
 class InSession(metaclass=InSessionMeta):
+    """此类的子类在同一个session中不会重复创建实例"""
+
     def __init__(self, session):
         self.session = session
 
@@ -219,6 +238,7 @@ class State(defaultdict):
             pass
 
 
-mode = State(lambda: 'chat', get_id)  # 当前模式
+mode = State(lambda: '', get_id)  # 当前模式
 power = State(lambda: True, get_user)  # 总开关
 last = State(lambda: 'chat', get_id)  # 记录上一次的mode
+history = State(lambda: ['', 0], get_id)  # 记录上一条消息及其连续出现次数

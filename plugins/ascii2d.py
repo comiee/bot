@@ -22,4 +22,4 @@ async def _(session: CommandSession):
                 for a in i.xpath('./a'):
                     res += f'{a.text}({a.get("href")})\n'
                 res += '\n'
-            await session.send('找到以下结果：\n' + res)
+            await session.send(res)

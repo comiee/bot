@@ -18,13 +18,6 @@ async def _(session: CommandSession):
     await session.send(f'{user!r}体力值：{stamina}')
 
 
-@on_command('筹码')
-async def _(session: CommandSession):
-    user = User(session)
-    chip = user.query('chip')
-    await session.send(f'{user!r}筹码数：{chip}')
-
-
 @on_command('物品', aliases=('背包',))
 async def _(session: CommandSession):
     user = User(session)

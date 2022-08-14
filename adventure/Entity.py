@@ -2,6 +2,7 @@ from adventure.exceptions import Dead
 
 
 class Entity:
+    """实体"""
     name = ''  # 名字
     live = True  # 是否存活
     max_hp = 0  # 最大血量
@@ -12,8 +13,9 @@ class Entity:
     def __bool__(self):
         return self.live
 
-    def set_name(self, name):
-        self.name = name
+    def set(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
         return self
 
     def get_attribute(self):

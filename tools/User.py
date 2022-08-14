@@ -1,5 +1,6 @@
 from nonebot.session import BaseSession
 from tools.sql import get_user, cur
+from tools.state import is_sure
 
 
 class User(int):
@@ -93,7 +94,7 @@ class User(int):
 
     async def ask(self, prompt=None):
         """询问是否继续"""
-        if self.session.get('answer', prompt=prompt) not in {'是', '继续', 'Y', 'y', 'yes', '确认'}:
+        if not is_sure(self.session.get('answer', prompt=prompt)):
             await self.session.send('命令已取消。', at_sender=True)
             self.session.finish()
 

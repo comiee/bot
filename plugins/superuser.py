@@ -5,6 +5,7 @@ from tools.User import User
 from functools import partial
 import re
 import sys
+import os
 
 super_command = partial(on_command, permission=permission.SUPERUSER)
 
@@ -71,17 +72,8 @@ async def _(session: CommandSession):
 
 @super_command('exec')
 async def _(session: CommandSession):
-    result = []
-    functions = []
-    exec(session.current_arg_text, {
-        'session': session,
-        'send': lambda s: result.append(str(s)),
-        'wait': lambda f: functions.append(f)
-    })
-    for i in functions:
-        await i
-    for i in result:
-        await session.send(i)
+    exec('async def func(session,User):\n\t' + session.current_arg_text.replace('\n', '\n\t'))
+    await eval('func(session,User)')
 
 
 @super_command('eval')
@@ -96,7 +88,16 @@ async def _(session: CommandSession):
                        '\n'.join('\t'.join(map(str, i)) for i in cur.fetchall()))
 
 
-@super_command('小魅，睡觉了')
+@super_command('cmd')
 async def _(session: CommandSession):
-    await session.send('不聊了，小魅要去陪主人睡觉了，大家晚安')
+    with os.popen(session.current_arg_text) as p:
+        await session.send(p.read())
+
+
+@super_command('小魅，睡觉了', aliases=('小魅，关机',))
+async def _(session: CommandSession):
+    for group_id in [694541980, 811912656, 324085758]:
+        await session.bot.send_group_msg(group_id=group_id, message='小魅要去陪主人睡觉了，大家晚安')
+    if session.ctx['raw_message'] == '小魅，关机':
+        os.system('shutdown -s -t 0')
     sys.exit()
